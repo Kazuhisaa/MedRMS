@@ -53,3 +53,4 @@ class MedicineController {
         echo json_encode(['success' => true]);
     }
 }
+    
