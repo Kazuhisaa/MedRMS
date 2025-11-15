@@ -15,8 +15,10 @@ class MedicineRepository {
 
     // Fetch all medicines
     public function getAll() {
-        $stmt = $this->conn->query("SELECT * FROM medicines ORDER BY name");
-        $rows = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $stmt = $this->conn->prepare("SELECT * FROM medicines WHERE deleted_at IS NULL");
+    $stmt->execute();
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+
 
         $medicines = [];
         foreach ($rows as $row) {
@@ -79,9 +81,16 @@ class MedicineRepository {
         ]);
     }
 
-    // Delete medicine by ID
+    //Rrchive
     public function delete($id) {
-        $stmt = $this->conn->prepare("DELETE FROM medicines WHERE id = ?");
+        $stmt = $this->conn->prepare("UPDATE medicines SET deleted_at = NOW() WHERE id = ?");
         return $stmt->execute([$id]);
     }
+    // Restore medicine by ID
+    public function restore($id) {
+        $stmt = $this->conn->prepare("UPDATE medicines SET deleted_at = NULL WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
+
 }

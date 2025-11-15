@@ -2,6 +2,9 @@
 namespace App\Controllers;
 
 use App\Services\MedicineService;
+use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Http\Message\ServerRequestInterface as Request;
+use App\Models\Medicine;
 
 class MedicineController {
     private $service;
@@ -10,47 +13,86 @@ class MedicineController {
         $this->service = new MedicineService();
     }
 
-    // GET /api/medicines
-    public function getAll() {
-        header('Content-Type: application/json');
+  
+    public function index(Request $request, Response $response, array $args): Response {
         $medicines = $this->service->getAllMedicines();
-
-        // Convert each Medicine object to array
         $data = array_map(fn($med) => (array)$med, $medicines);
 
-        echo json_encode($data);
+        $response->getBody()->write(json_encode($data));
+        return $response
+                ->withHeader('Content-Type', 'application/json')
+                ->withStatus(200);
     }
 
-    // GET /api/medicines/{id}
-    public function getById($id) {
-        header('Content-Type: application/json');
+   
+    public function show(Request $request, Response $response, array $args): Response {
+        $id = $args['id'];
         $med = $this->service->getMedicineById($id);
+
         if ($med) {
-            echo json_encode((array)$med);
+            $response->getBody()->write(json_encode((array)$med));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
         } else {
-            http_response_code(404);
-            echo json_encode(['error' => 'Medicine not found']);
+            $response->getBody()->write(json_encode(['error' => 'Medicine not found']));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(404);
         }
     }
 
-    // POST /api/medicines
-    public function create($postData) {
-        header('Content-Type: application/json');
+    
+    public function store(Request $request, Response $response, array $args): Response {
+        $postData = $request->getParsedBody();
+
         try {
-            $med = new \App\Models\Medicine($postData);
+            $med = new Medicine($postData);
             $this->service->addMedicine($med);
-            echo json_encode(['success' => true]);
+
+            $response->getBody()->write(json_encode(['success' => true]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(201);
         } catch (\Exception $e) {
-            http_response_code(400);
-            echo json_encode(['error' => $e->getMessage()]);
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
         }
     }
 
-    // DELETE /api/medicines/{id}
-    public function delete($id) {
-        header('Content-Type: application/json');
+
+    public function update(Request $request, Response $response, array $args): Response {
+        $id = $args['id'];
+        $postData = $request->getParsedBody();
+
+        try {
+            $med = new Medicine($postData);
+            $this->service->updateMedicine($id, $med);
+
+            $response->getBody()->write(json_encode(['success' => true]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['error' => $e->getMessage()]));
+            return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
+    }
+
+
+    public function delete(Request $request, Response $response, array $args): Response {
+        $id = $args['id'];
+
         $this->service->deleteMedicine($id);
-        echo json_encode(['success' => true]);
+
+        $response->getBody()->write(json_encode(['success' => true]));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    }
+
+    public function restore(Request $request, Response $response, array $args) {
+    $id = $args['id'];
+
+    $success = $this->service->restoreMedicine($id);
+
+    if ($success) {
+        $response->getBody()->write(json_encode(['success' => true]));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(200);
+    } else {
+        $response->getBody()->write(json_encode(['error' => 'Restore failed']));
+        return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
     }
 }
-    
+
+}

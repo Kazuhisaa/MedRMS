@@ -17,6 +17,8 @@ class Medicine{
     public $expiry_date;
     public $suppliers;
     public $date_added;
+    public $deleted_at;
+
 
  public function __construct($data = []) {
         $this->id = $data['id'] ?? null;
@@ -32,6 +34,7 @@ class Medicine{
         $this->expiry_date = $data['expiry_date'] ?? null;
         $this->suppliers = $data['suppliers'] ?? null;
         $this->date_added = $data['date_added'] ?? null;
+        $this->deleted_at = $data['deleted_at'] ?? null; 
 
 
 
